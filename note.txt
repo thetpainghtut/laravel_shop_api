@@ -1,0 +1,14 @@
+API Auth
+-------
+
+UI
+--
+  - register (name, email, password, confirm_password) => client_id, client_secrt
+
+  - login (email, password) => login attemp
+  - email,password,client_id,client_secret,grant_type => api (oauth/token)
+
+
+API
+---
+  - token_type, expired, access_token, refresh_token
