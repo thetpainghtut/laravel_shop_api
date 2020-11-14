@@ -25,3 +25,6 @@ Route::apiresource('subcategories','SubcategoryController');
 Route::apiresource('items','ItemController');
 
 Route::apiresource('users', 'UserController');
+
+Route::post('login', 'UserController@login');
+Route::get('logout', 'UserController@logout');

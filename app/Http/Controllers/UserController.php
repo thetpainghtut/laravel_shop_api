@@ -6,9 +6,16 @@ use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\UserResource;
+use Carbon\Carbon;
+use Auth;
+use GuzzleHttp\Client;
 
 class UserController extends Controller
 {
+    public function __construct($value='')
+    {
+        $this->middleware('auth:api')->only('logout');
+    }
     /**
      * Display a listing of the resource.
      *
@@ -51,6 +58,8 @@ class UserController extends Controller
         $user->password = Hash::make($request->password);
         $user->save();
 
+        // return $user->createToken('MyApp')->accessToken;
+
         return new UserResource($user);
     }
 
@@ -86,5 +95,42 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         //
+    }
+
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|string|email',
+            'password' => 'required|string',
+            'remember_me' => 'boolean'
+        ]);
+
+        $credentials = request(['email', 'password']);
+
+        if(!Auth::attempt($credentials))
+            return response()->json([
+                'message' => 'Unauthorized'
+            ], 401);
+
+        $user = $request->user();
+        $tokenResult = $user->createToken('Personal Access Token');
+        $token = $tokenResult->token;
+        if ($request->remember_me)
+            $token->expires_at = Carbon::now()->addWeeks(1);
+        $token->save();
+        return response()->json([
+            'access_token' => $tokenResult->accessToken,
+            'token_type' => 'Bearer',
+            'expires_at' => Carbon::parse($tokenResult->token->expires_at)->toDateTimeString()
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->token()->revoke();
+
+        return response()->json([
+            'message' => 'Successfully logged out'
+        ]);
     }
 }
